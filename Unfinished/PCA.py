@@ -1,7 +1,7 @@
 import numpy as np
-from mathtools import covariance_matrix
+from Unfinished.mathtools import covariance_matrix
 from sklearn.decomposition import PCA
-from mathtools import standardize
+from Unfinished.mathtools import standardize
 from sklearn.preprocessing import StandardScaler
 
 

@@ -1,9 +1,9 @@
 import torch
 
 # import torch.nn as nn
-from TrainerClass import Trainer
-from Module import ModelModule
-from SynthRegData import SyntheticRegressionData
+from Unfinished.TrainerClass import Trainer
+from Unfinished.Module import ModelModule
+from Unfinished.SynthRegData import SyntheticRegressionData
 import matplotlib.pyplot as plt
 
 
@@ -56,5 +56,3 @@ trainer.fit(model, data)
 
 plt.show()
 plt.close()
-
-
