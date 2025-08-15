@@ -3,11 +3,12 @@ from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import OrdinalEncoder
 import pandas as pd
 from scipy.stats import norm
+from numpy.typing import ArrayLike
 
 
 # Categorical Naive Bayes
 class CategoricalNaiveBayes:
-    def __init__(self, smoothing_param=1):
+    def __init__(self, smoothing_param: float = 1):
         self.smoothing_param = smoothing_param
         self.data = None
         self.target_classes = 0
@@ -15,7 +16,7 @@ class CategoricalNaiveBayes:
         self.encoder = None
         self.lookup_table = []
 
-    def fit(self, data, target, ordinal_encode=False):
+    def fit(self, data, target, ordinal_encode: bool = False):
 
         if len(data) != len(target):
             raise ValueError("Must have same amount of target rows (predictions) to data rows (samples)")
@@ -76,7 +77,7 @@ class CategoricalNaiveBayes:
 
 
 class ContinuousNaiveBayes:
-    def __init__(self, smoothing_param=1e-9):
+    def __init__(self, smoothing_param: float = 1e-9):
         self.smoothing_param = smoothing_param
         self.target_probabilities = np.array([])
         self.target_classes = 0

@@ -1,33 +1,31 @@
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike
 
 
 class kNN:
-    def __init__(self, k=5, power=2):
+    def __init__(self, k: int = 5, power: int = 2):
         self.k = max(1, int(k))
         self.traindata = None
         self.target = None
         self.power = power
 
-    def _validate(self, data):
+    def _validate(self, data: ArrayLike):
         if isinstance(data, (pd.DataFrame, pd.Series)):
             data = data.to_numpy()
         if not isinstance(data, (np.ndarray)):
             raise ValueError("Input an np array or a pandas dataframe/series")
         return data
 
-    def fit(self, data, target):
-        if len(data) != len(target):
-            raise ValueError("Must have same amount of target rows (predictions) to data rows (samples)")
+    def fit(self, data: ArrayLike, target: ArrayLike):
         if isinstance(target, (pd.Series)):
             target = target.to_numpy()
         elif not isinstance(target, (np.ndarray)):
             raise ValueError("Input an np array or a pandas dataframe/series")
-
         data = np.hstack((self._validate(data), target.reshape(-1, 1)))
         self.traindata = data
 
-    def predict(self, testdata):
+    def predict(self, testdata: ArrayLike):
         if self.traindata is None:
             raise ValueError("Please fit before you predict")
         testdata = self._validate(testdata)

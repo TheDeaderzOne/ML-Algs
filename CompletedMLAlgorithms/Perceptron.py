@@ -4,7 +4,7 @@ import pandas as pd
 
 class Perceptron:
 
-    def __init__(self, n_iterations=100):
+    def __init__(self, n_iterations: int = 100):
         self.weight_vector = np.array([])
         self.n_iterations = n_iterations
         self.converged = False
