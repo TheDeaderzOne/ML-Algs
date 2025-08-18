@@ -6,6 +6,12 @@ def max_mult(start_vec: np.ndarray, a: np.ndarray, b: np.ndarray):
     if len(a[0]) != len(b):
         raise ValueError("There is a shape mismatch")
 
+    # log it up
+    # this should never be 0
+    start_vec = np.log(start_vec + 1e-12)
+    a = np.log(a + 1e-12)
+    b = np.log(b + 1e-12)
+
     new_arr = np.zeros((len(a), len(b[0])))
     s_arr = np.zeros((len(a), len(b[0])), dtype=int)
     s_arr[:, 0] = -1  # back_pointers
@@ -13,10 +19,13 @@ def max_mult(start_vec: np.ndarray, a: np.ndarray, b: np.ndarray):
 
     for y in range(1, len(b[0])):
         for x in range(len(a)):
-            new_arr[x][y] = np.max(new_arr[:, y - 1] * a[:, x] * b[x][y])
-            s_arr[x][y] = int(np.argmax(new_arr[:, y - 1] * a[:, x] * b[x][y]))
+            new_arr[x][y] = np.max(new_arr[:, y - 1] + a[:, x] + b[x][y])
+            s_arr[x][y] = int(np.argmax(new_arr[:, y - 1] + a[:, x] + b[x][y]))
 
     return new_arr, s_arr
+
+
+# use log probs
 
 
 class HMM:
@@ -43,9 +52,12 @@ class HMM:
         eigenvector = eigenvector / np.sum(eigenvector)
         return eigenvector
 
+    def _build_observ_matr(self, observations):
+        return np.column_stack([self.emission_matrix[:, self.encoding[o]].reshape(-1, 1) for o in observations])
+
     def likelihood(self, hidden_states, observations, init_prob=None) -> float:
 
-        observ_matr = np.column_stack([self.emission_matrix[:, self.encoding[o]].reshape(-1, 1) for o in observations])
+        observ_matr = self._build_observ_matr(observations)
         new_hidden_states = [self.hidden_encoding_dict[o] for o in hidden_states]
 
         if init_prob is None:
@@ -53,20 +65,19 @@ class HMM:
         else:
             init_prob_eigenvec = init_prob * observ_matr[:, 0]
 
-        init_like = init_prob_eigenvec[new_hidden_states[0]]
+        init_like = np.log(init_prob_eigenvec[new_hidden_states[0]])
 
         for x in range(len(new_hidden_states) - 1):
-            init_like *= (
-                self.markov_matrix[new_hidden_states[x]][new_hidden_states[x + 1]]
-                * observ_matr[new_hidden_states[x + 1]][x + 1]
+            init_like += np.log(self.markov_matrix[new_hidden_states[x]][new_hidden_states[x + 1]] + 1e-12) + np.log(
+                observ_matr[new_hidden_states[x + 1]][x + 1] + 1e-12
             )
 
-        return init_like
+        return np.exp(init_like)
 
     # Must be given in Ordinal Encoding or something, for emission matrix
     def decode(self, observations, initial_probabilities=None):
 
-        observ_matr = np.column_stack([self.emission_matrix[:, self.encoding[o]].reshape(-1, 1) for o in observations])
+        observ_matr = self._build_observ_matr(observations)
 
         if initial_probabilities is None:
             init_prob_eigenvec = self.__eig_taker(self.markov_matrix.T) * observ_matr[:, 0]
@@ -75,7 +86,7 @@ class HMM:
 
         mult_object = max_mult(init_prob_eigenvec, self.markov_matrix, observ_matr)
 
-        score = np.max(mult_object[0][:, -1])
+        score = np.exp(np.max(mult_object[0][:, -1]))
 
         best_row_pointer = np.argmax(mult_object[0][:, -1])
 
