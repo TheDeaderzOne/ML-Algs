@@ -83,5 +83,3 @@ def correlation_matrix(X, Y=None):
 # # Tests (Var Matr)
 # print(np.var(H, axis=0))
 # print(variance_matrix(H))
-
-

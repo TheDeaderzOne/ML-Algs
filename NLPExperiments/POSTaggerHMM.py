@@ -1,26 +1,24 @@
 import numpy as np
 from typing import List
 from collections import Counter
-
 import sys
 import os
+import random
 
-# Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Get the parent directory (the one containing 'CompletedMLAlgorithms')
 parent_dir = os.path.dirname(current_dir)
-
-# Add the parent directory to the Python search path
 sys.path.append(parent_dir)
-
-# Now your imports should work
 from CompletedMLAlgorithms.HiddenMarkovModel import HMM
 
 # remember the unknown tag, unk
 # anything in the vocab only used twice or less gets turned to unknown
 # we just need initial probabilities
 # add-one smoothing
+
+
+def list_accuracy_tuple(list1, list2):
+
+    return sum(x == y for x, y in zip(list1, list2)), len(list1)
 
 
 class POS_HMM(HMM):
@@ -65,9 +63,14 @@ class POS_HMM(HMM):
                 self.emission_matrix[tag_ind][word_ind] += 1
                 prev_tag = s[w][1]
 
-    def __init__(self, corpus):
-
-        sents = corpus.tagged_sents()
+    def __init__(self, corpus, train_test_split=1.0):
+        # should sents be a list or not?
+        sents = list(corpus.tagged_sents())
+        random.seed(43)
+        random.shuffle(sents)
+        train_size = int((len(sents) * train_test_split))
+        self.testsents = sents[train_size:]
+        sents = sents[:train_size]
 
         self.hidden_encoding, self.hidden_encoding_dict = self._tags(sents)
         self.encoding = self._words(sents)
@@ -77,7 +80,8 @@ class POS_HMM(HMM):
         self.init_prob_dict = {key: 0 for key in self.hidden_encoding_dict}
 
         self._fit(sents)
-
+        self.markov_matrix += 0.01
+        self.emission_matrix += 0.01
         self.markov_matrix = self.markov_matrix / np.sum(self.markov_matrix, axis=1, keepdims=True)
         self.emission_matrix = self.emission_matrix / np.sum(self.emission_matrix, axis=1, keepdims=True)
         self.init_prob = np.array(list(self.init_prob_dict.values()), dtype=float)
@@ -98,3 +102,27 @@ class POS_HMM(HMM):
 
     def decode(self, observations, initial_probabilities=None):
         return super().decode(observations, self.init_prob)
+
+    def accuracy_test(self, print_flag=False):
+
+        correct = 0
+        total = 0
+
+        predictions = []
+        results = []
+
+        for sentence in self.testsents:
+            sent, result = zip(*sentence)
+            predict = self.decode(sent)[0]
+            if print_flag:
+                predictions.append(predict)
+                results.append(result)
+
+            accuracy_tuple = list_accuracy_tuple(predict, result)
+            correct += accuracy_tuple[0]
+            total += accuracy_tuple[1]
+        if print_flag:
+            print(predictions)
+            print(results)
+
+        return correct / total
